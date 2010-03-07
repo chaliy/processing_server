@@ -7,7 +7,7 @@ type Agent<'T> = MailboxProcessor<'T>
 
 [<AutoOpen>]
 module SyncContextHelpers =
-    let current() = 
+    let internal current() = 
         match SynchronizationContext.Current with 
         | null -> new SynchronizationContext()
         | ctxt -> ctxt
