@@ -6,11 +6,21 @@ type Task = {
     Handler : string
 }
 
-module TaskStorage =
-    let TASK1_ID = "TASK1_ID"  
-    let last() = 
-        { ID = TASK1_ID 
-          Handler = "Example" }
+type TaskStorage() =
+
+    static member TASK1_ID = "TASK1_ID"    
+
+    member x.LastFew = seq {
+        yield { ID = TaskStorage.TASK1_ID 
+                Handler = "Example" }
+    }
+
+type StorageAgent(taskStorage : TaskStorage) =    
+    let taskReady = new Event<Task>()    
+    
+    member x.Start() = ()
+    member x.TaskReady = taskReady.Publish
+
 
 type ProcessingAgent() =    
        
@@ -19,10 +29,7 @@ type ProcessingAgent() =
     let failed = new Event<ID * System.Exception>()
 
     let resolveHadler t = fun unit -> Thread.Sleep(1000); ()
-
-    let syncContext = SynchronizationContext.CaptureCurrent()  
-    let raise event args = syncContext.RaiseEvent event args
-
+    
     let agent = 
         new Agent<Task>(fun inbox ->
                             async {
@@ -39,20 +46,29 @@ type ProcessingAgent() =
                             } )    
 
     member x.Post msg = agent.Post msg
-    member x.Start () = agent.Start()
+    member x.Start() = agent.Start()
     member x.Started = started.Publish
     member x.Success = success.Publish
 
-let agent = new ProcessingAgent()
-agent.Started.Add(printfn "Started %s")
-agent.Success.Add(printfn "Success %s")
 
-agent.Start()
+let storage = TaskStorage()
+let storageAgent = StorageAgent(storage)
+let processingAgent = ProcessingAgent()
 
-agent.Post { ID = "TASK1_ID"
-             Handler = "Example" }
+// Wire up agents
+processingAgent.Started.Add(printfn "Started %s")
+processingAgent.Success.Add(printfn "Success %s")
 
-agent.Post { ID = "TASK2_ID"
-             Handler = "Example #2" }
+storageAgent.TaskReady.Add(processingAgent.Post)
+
+
+storageAgent.Start()
+processingAgent.Start()
+
+processingAgent.Post { ID = "TASK1_ID"
+                       Handler = "Example" }
+
+processingAgent.Post { ID = "TASK2_ID"
+                       Handler = "Example #2" }
 
 System.Console.ReadLine() |> ignore
