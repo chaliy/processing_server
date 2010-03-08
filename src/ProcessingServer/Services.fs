@@ -6,9 +6,11 @@ open System.Collections.Generic
 open System.ServiceModel
 
 open Shared
-open Storage
+open Model
 
-(* Model *)
+// *************
+// *** Model ***
+// *************
 
 [<DataContract(Namespace="urn:org:mir:processing-v1.0")>]
 type DataItem() =
@@ -38,21 +40,31 @@ type TaskProcessing =
     [<OperationContract(IsOneWay = true)>]
     abstract member Post : Task -> unit
 
-(* Implementation *)
-type TaskProcessingService() = 
-    interface TaskProcessing with
-        member gms.Post(t) = ()
-        
-type ServiceAgent(storage : TaskStorage) =
+// **********************
+// *** Implementation ***
+// **********************
+
+type ServiceAgent() =
+
+    let posted = new Event<Model.Task>()
+    let sync = SyncContext.Current()
+
+    let convert (t : Task) = 
+        { ID = t.ID
+          Handler = t.Handler
+          Data = t.Data 
+                 |> Seq.map(fun x -> (x.Key, x.Value :> obj))
+                 |> Seq.toList }
     
     let service = { new TaskProcessing with
-                        member gms.Post(t) = () }    
-    let init() =        
-        let baseAddress = Uri("http://localhost:1066/")
-        use host = new ServiceHost(service, baseAddress)
+                        member gms.Post(t) = sync.Raise posted (convert t) }  
+
+    let baseAddress = Uri("http://localhost:1066/")                        
+    let host =         
+        let host = new ServiceHost(service, baseAddress)
         host.AddServiceEndpoint(typeof<TaskProcessing>,
             new WSHttpBinding(SecurityMode.Message), "") |> ignore
-      
-        host.Open();
-
-    member x.Start() = init()                                                    
+        host
+        
+    member x.Start() = host.Open()
+    member x.Posted = posted.Publish

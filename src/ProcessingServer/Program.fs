@@ -2,17 +2,19 @@
 open Model
 open Storage
 open Processing
+open Services
 open System
 open System.Threading
 
+// *******************************
+// *** Wire-up processing part ***
+// *******************************
 
 let storage = TaskStorage()
 let storageAgent = StorageAgent(storage)
 let processingAgent = ProcessingAgent()
 
 storage.Dump()
-
-// Wire up agents
 
 // Write some debug
 processingAgent.Started.Add(printfn "Started %s")
@@ -28,7 +30,7 @@ processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
 processingAgent.Success
 |> Observable.merge(processingAgent.Started)
 |> Observable.merge(processingAgent.Failed 
-                    |> Observable.map(fun (id, ex) -> id))
+                    |> Observable.map(fun (id, ex) -> id))                    
 |> Observable.add(fun _ -> storageAgent.Ping())
 
 // post to processing agent if any task available
@@ -39,6 +41,14 @@ storageAgent.Start()
 
 // First ping
 storageAgent.Ping()
+
+// *******************************
+// ***  Wire-up listening part ***
+// *******************************
+
+let servceAgent = ServiceAgent();
+servceAgent.Posted.Add(storage.Post)
+servceAgent.Start()
 
 while true do
     let inp = System.Console.ReadLine()

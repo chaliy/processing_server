@@ -14,7 +14,7 @@ type TaskStatus =
 | Completed
 | Failed
 
-// For reference purposes only!
+// For reference purposes
 //type TaskRecord = {
 //    ID : ID
 //    Data : (string * obj) list
