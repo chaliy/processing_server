@@ -49,6 +49,13 @@ type TaskStorage() =
         |> Seq.map(fun d -> d.ToString())
         |> Seq.iter(printfn "%s")
 
+    let clean() =
+        printfn "TaskStorage : Clean"
+
+        use ctx = connect()        
+        let tasks = ctx |> tasks
+        tasks.Delete(new Document())                    
+
     
     let pick() : Option<Task> = 
         printfn "TaskStorage : Pick"
@@ -64,17 +71,22 @@ type TaskStorage() =
         use res = tasks.Find(doc [v "Status" (s Pending)])
                        .Sort("IssuedDate")
                        .Limit(1)
+                                                 
+        let docs = res.Documents |> Seq.toList
 
-        if res.Documents |> Seq.isEmpty then None
-        else
-           let doc = res.Documents |> Seq.nth(0) 
-           doc.["Status"] <- (s Picked)
-           doc.["PickedDate"] <- DateTime.UtcNow
-           tasks.Update(doc)
+        if docs.Length = 0 then
+            printfn "TaskStorage : Nothing picked"
+            None
+        else                       
+            printfn "TaskStorage : Something picked"
+            let doc = docs.Head
+            doc.["Status"] <- (s Picked)
+            doc.["PickedDate"] <- DateTime.UtcNow
+            tasks.Update(doc)
 
-           Some({ ID = doc.GetID("_id")
-                  Handler = doc.GetString("Handler")
-                  Data = doc.GetData("Data") })      
+            Some({ ID = doc.GetID("_id")
+                   Handler = doc.GetString("Handler")
+                   Data = doc.GetData("Data") })      
 
     let post t =
         printfn "TaskStorage : Post"
@@ -83,6 +95,7 @@ type TaskStorage() =
         tasks.Insert(doc [v "_id" t.ID
                           v "Handler" t.Handler
                           v "Status" (s Pending)
+                          v "IssuedDate" DateTime.UtcNow
                           v "Data" t.Data])
 
     let byId id = 
@@ -91,8 +104,11 @@ type TaskStorage() =
     let mark id upd =
         use ctx = connect()
         let tasks = ctx |> tasks
+        let doc = tasks.FindOne(byId id)
+        
+        upd |> Seq.iter(fun (k, v) -> doc.[k] <- v)        
                 
-        tasks.Update(doc upd, byId id)
+        tasks.Update(doc)
 
     member x.MarkStarted id = mark id [v "Status" (s Started)
                                        v "StartedDate" DateTime.UtcNow]
@@ -107,3 +123,4 @@ type TaskStorage() =
     member x.Pick = pick
     member x.Post = post
     member x.Dump = dump
+    member x.Clean = clean

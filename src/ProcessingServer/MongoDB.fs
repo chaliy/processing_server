@@ -7,8 +7,9 @@ type Context =
     inherit System.IDisposable
 
 let connect() =
-    let mongo = new Mongo()
-    ignore (mongo.Connect())
+    let mongo = new Mongo()    
+    if not (mongo.Connect()) then
+        failwith "Cannot connect"
  
     { new Context with
         member this.get_Item(name) = mongo.[name]

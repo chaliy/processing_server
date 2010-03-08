@@ -8,17 +8,17 @@ open System.Threading
 
 type StorageAgent(storage : TaskStorage) =    
     let taskReady = new Event<Task>()
+    let sync = SyncContext.Current()
 
     let agent = 
-        new Agent<_>(fun inbox ->
-                            async {
-                                let! _ = inbox.Receive()        
-                                let task = storage.Pick()
-                                if task.IsSome then
-                                    task.Value |> raise taskReady
-                            } )
+        new Agent<_>(fun _ ->                            
+                        printfn "StorageAgent: Ping recieved"    
+                        let task = storage.Pick()
+                        if task.IsSome then
+                            task.Value |> sync.Raise taskReady )                            
     
     member x.Ping() = agent.Post()
+    member x.Start() = agent.Start()
     member x.TaskReady = taskReady.Publish
 
 
@@ -27,6 +27,7 @@ type ProcessingAgent() =
     let started = new Event<ID>()
     let success = new Event<ID>()
     let failed = new Event<ID * System.Exception>()
+    let sync = SyncContext.Current()
 
     let resolveHadler t = (fun (data : (string * obj) list) ->                             
                             printfn "Executing: %s" t.ID
@@ -35,19 +36,16 @@ type ProcessingAgent() =
                             ())
     
     let agent = 
-        new Agent<Task>(fun inbox ->
-                            async {
-                                while true do
-                                    let! task = inbox.Receive()                                   
-                                    let handler = resolveHadler task
+        new Agent<Task>(fun task ->                                                               
+                            printfn "ProcessingAgent: New task recieved"                     
+                            let handler = resolveHadler task
 
-                                    raise started task.ID                         
-                                    try                             
-                                        handler(task.Data)
-                                        raise success task.ID
-                                    with
-                                    | x -> raise failed (task.ID, x)
-                            } )    
+                            sync.Raise started task.ID             
+                            try                             
+                                handler(task.Data)
+                                sync.Raise success task.ID
+                            with
+                            | x -> sync.Raise failed (task.ID, x) )    
 
     member x.Post msg = agent.Post msg
     member x.Start() = agent.Start()

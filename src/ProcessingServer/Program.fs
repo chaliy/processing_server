@@ -10,6 +10,8 @@ let storage = TaskStorage()
 let storageAgent = StorageAgent(storage)
 let processingAgent = ProcessingAgent()
 
+storage.Dump()
+
 // Wire up agents
 
 // Write some debug
@@ -33,12 +35,20 @@ processingAgent.Success
 storageAgent.TaskReady.Add(processingAgent.Post)
 
 processingAgent.Start()
+storageAgent.Start()
 
 // First ping
 storageAgent.Ping()
 
 while true do
-    let newTask = System.Console.ReadLine()
-    storage.Post({ ID = "TASK1_ID"
-                   Handler = "Example"
-                   Data = [v "Input" newTask ] })
+    let inp = System.Console.ReadLine()
+    match inp with
+    | "Dump" -> storage.Dump()
+    | "Ping" -> storageAgent.Ping()
+    | "Clean" -> storage.Clean()
+    | x ->
+        let id = Guid.NewGuid().ToString()
+        storage.Post({ ID = id
+                       Handler = "Example"
+                       Data = [v "Input" inp ] } )
+        storageAgent.Ping()

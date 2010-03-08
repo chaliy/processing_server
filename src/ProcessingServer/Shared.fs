@@ -3,32 +3,29 @@
 open System.Threading
  
 type ID = string
-type Agent<'T> = MailboxProcessor<'T>
+type Agent<'T>(run : 'T -> unit) =
+    let agent = new MailboxProcessor<'T>(fun inbox -> async { 
+                                            while true do
+                                                let! x = inbox.Receive()    
+                                                run(x)
+                                        })
 
-[<AutoOpen>]
-module SyncContextHelpers =
-    let internal current() = 
+    member x.Start() = agent.Start()
+    member x.Post = agent.Post
+    
+    interface System.IDisposable with
+        member x.Dispose() = (agent :> System.IDisposable).Dispose()  
+
+module SyncContext =
+    let Current() = 
         match SynchronizationContext.Current with 
         | null -> new SynchronizationContext()
         | ctxt -> ctxt
 
-    let raise (event: Event<_>) args =
-        current().Post((fun _ -> event.Trigger args), state = null) 
-
-//type SynchronizationContext with 
-//
-//    /// A standard helper extension method to raise an event on the GUI thread
-//    member syncContext.RaiseEvent (event: Event<_>) args = 
-//        //let mutable syncContext : SynchronizationContext = null
-//        syncContext.Post((fun _ -> event.Trigger args), state = null)
-//
-// 
-//    /// A standard helper extension method to capture the current synchronization context.
-//    /// If none is present, use a context that executes work in the thread pool.
-//    static member CaptureCurrent () = 
-//        match SynchronizationContext.Current with 
-//        | null -> new SynchronizationContext()
-//        | ctxt -> ctxt
-
+type SynchronizationContext with 
+    
+    member sync.Raise (event: Event<_>) args = 
+        //let mutable syncContext : SynchronizationContext = null
+        sync.Post((fun _ -> event.Trigger args), state = null)
 
 let v k d = (k, d :> obj)
