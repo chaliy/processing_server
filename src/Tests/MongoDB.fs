@@ -1,21 +1,22 @@
 ﻿module ``MongoDB Extensions Specification``
 
-    open FsSpec        
+open FsSpec        
+open Shared
+open MongoDB
 
-    type FakeRec = {
-        String : string
+module ``Describe doc operation (Converting sequence of tuples to Rocument)`` =
+
+    let ``return at least something...`` = spec {                        
+        let res = doc [v "_id" "Something"
+                       v "Status" "Cool"]   
+
+        res.should_not_be_null                
     }
 
-    module ``Describe converting Record to Document`` =
+    let ``support inner docs`` = spec {            
+        let res = doc [v "Inner" [v "_id" "InnerSomething"]]   
 
-        let fake = {String = "Test"}
-        let res = MongoDB.Cnvt.toDocument(fake)
-    
-        let ``return at least something...`` = spec {                        
-            res.should_not_be_null                
-        }
-        
-        let ``covert string field`` = spec {            
-            let resultString = (res.["String"] :?> string)
-            resultString.should_be_equal_to "Test"
-        }              
+        let innerResult = res.["Inner"] :?> MongoDB.Driver.Document
+
+        innerResult.should_not_be_null
+    }              

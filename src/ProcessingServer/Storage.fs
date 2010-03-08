@@ -1,0 +1,109 @@
+﻿module Storage
+
+open Shared
+open Model
+
+open System
+open MongoDB
+open MongoDB.Driver
+
+type TaskStatus =
+| Pending
+| Picked
+| Started
+| Completed
+| Failed
+
+// For reference purposes only!
+//type TaskRecord = {
+//    ID : ID
+//    Data : (string * obj) list
+//    Handler : string
+//    Status : TaskStatus
+//    IssuedDate : DateTime        
+//    PickedDate : Option<DateTime>
+//    StartedDate : Option<DateTime>
+//    CompletedDate : Option<DateTime>
+//    FailedDate : Option<DateTime>
+//    FailedMessage : Option<string>
+//}
+
+type TaskStorage() =    
+
+    let s = function
+            | Pending -> "Pending"
+            | Picked -> "Picked"
+            | Started -> "Started"
+            | Completed -> "Completed"
+            | Failed -> "Failed" 
+            
+    let tasks (ctx : Context) = ctx.["ProcessingTasks"].["Tasks"]
+    
+    let dump() =
+        printfn "TaskStorage : Dump"
+
+        use ctx = connect()
+        let tasks = ctx |> tasks            
+
+        tasks.FindAll().Documents
+        |> Seq.map(fun d -> d.ToString())
+        |> Seq.iter(printfn "%s")
+
+    
+    let pick() : Option<Task> = 
+        printfn "TaskStorage : Pick"
+        
+        // Enter global lock
+        // Get most old pending task
+        // Mark them as Prepared with date
+        // Exit global lock
+
+        use ctx = connect()
+        let tasks = ctx |> tasks
+        
+        use res = tasks.Find(doc [v "Status" (s Pending)])
+                       .Sort("IssuedDate")
+                       .Limit(1)
+
+        if res.Documents |> Seq.isEmpty then None
+        else
+           let doc = res.Documents |> Seq.nth(0) 
+           doc.["Status"] <- (s Picked)
+           doc.["PickedDate"] <- DateTime.UtcNow
+           tasks.Update(doc)
+
+           Some({ ID = doc.GetID("_id")
+                  Handler = doc.GetString("Handler")
+                  Data = doc.GetData("Data") })      
+
+    let post t =
+        printfn "TaskStorage : Post"
+        use ctx = connect()
+        let tasks = ctx |> tasks
+        tasks.Insert(doc [v "_id" t.ID
+                          v "Handler" t.Handler
+                          v "Status" (s Pending)
+                          v "Data" t.Data])
+
+    let byId id = 
+        doc [v "_id" id]
+                  
+    let mark id upd =
+        use ctx = connect()
+        let tasks = ctx |> tasks
+                
+        tasks.Update(doc upd, byId id)
+
+    member x.MarkStarted id = mark id [v "Status" (s Started)
+                                       v "StartedDate" DateTime.UtcNow]
+
+    member x.MarkSuccess id = mark id [v "Status" (s Completed)
+                                       v "CompletedDate" DateTime.UtcNow]
+
+    member x.MarkFailed id (ex : Exception) = mark id [v "Status" (s Failed)
+                                                       v "FailedDate" DateTime.UtcNow
+                                                       v "FailedMessage" ex.Message]
+    
+    member x.Pick = pick
+    member x.Post = post
+    member x.Dump = dump
