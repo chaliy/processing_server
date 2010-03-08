@@ -1,4 +1,5 @@
 ﻿open Shared
+open System
 open System.Threading
 
 type Task = {
@@ -6,17 +7,51 @@ type Task = {
     Handler : string
 }
 
-type TaskStorage() =
+open MongoDB
 
-    static member TASK1_ID = "TASK1_ID"    
+type TaskStatus =
+| Pending
+| Picked
+| Started
+| Completed
+| Failed
+
+type TaskRecord = {
+    ID : ID
+    Data : (string * obj) list
+    Handler : string
+    Status : TaskStatus
+    PickedDate : Option<DateTime>
+    StartedDate : Option<DateTime>
+    CompletedDate : Option<DateTime>
+    FailedDate : Option<DateTime>
+    FailedMessage : Option<string>
+}    
+
+type TaskStorage() =    
+    
+
+    let pick() : Option<Task> = 
+        // Enter global lock
+        // Get most old pending task
+        // Mark them as Prepared with date
+        // Exit global lock                              
+
+        let ctx = Server.Connect()
+        let db = ctx.["ProcessingTasks"]
+        let tt = db.["Tasks"]
+        //tt.Find(
+
+        Some({ ID = TaskStorage.TASK1_ID 
+               Handler = "Example" })
+
+    static member TASK1_ID = "TASK1_ID"        
 
     member x.MarkStarted id = ()
     member x.MarkSuccess id = ()
     member x.MarkFailed id ex = ()
-    member x.LastFew() = seq {
-        yield { ID = TaskStorage.TASK1_ID 
-                Handler = "Example" }
-    }
+    member x.Pick() = pick()
+
 
 type StorageAgent(storage : TaskStorage) =    
     let taskReady = new Event<Task>()
@@ -25,8 +60,9 @@ type StorageAgent(storage : TaskStorage) =
         new Agent<_>(fun inbox ->
                             async {
                                 let! _ = inbox.Receive()        
-                                storage.LastFew()
-                                |> Seq.iter(fun t -> raise taskReady t)
+                                let task = storage.Pick()
+                                if task.IsSome then
+                                    task.Value |> raise taskReady
                             } )
     
     member x.Ping() = agent.Post()
@@ -48,7 +84,7 @@ type ProcessingAgent() =
                                     let! task = inbox.Receive()                                   
                                     let handler = resolveHadler task
 
-                                    raise started task.ID                                    
+                                    raise started task.ID                         
                                     try                             
                                         handler()
                                         raise success task.ID
@@ -80,8 +116,11 @@ processingAgent.Success.Add(storage.MarkSuccess)
 processingAgent.Failed.Add(fun (t, ex) -> storage.MarkFailed t ex)
 
 // Ping storage agent may be we have new tasks
-processingAgent.Success.Add(fun _ -> storageAgent.Ping())
-processingAgent.Failed.Add(fun _ -> storageAgent.Ping())
+processingAgent.Success
+|> Observable.merge(processingAgent.Started)
+|> Observable.merge(processingAgent.Failed 
+                    |> Observable.map(fun (id, ex) -> id))
+|> Observable.add(fun _ -> storageAgent.Ping())
 
 // post to processing agent if any task available
 storageAgent.TaskReady.Add(processingAgent.Post)
