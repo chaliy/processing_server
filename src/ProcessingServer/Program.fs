@@ -28,10 +28,10 @@ processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
 
 // Ping storage agent may be we have new tasks
 processingAgent.Success
-|> Observable.merge(processingAgent.Started)
-|> Observable.merge(processingAgent.Failed 
-                    |> Observable.map(fun (id, ex) -> id))                    
-|> Observable.add(fun _ -> storageAgent.Ping())
+|> Event.merge(processingAgent.Started)
+|> Event.merge(processingAgent.Failed 
+                    |> Event.map(fun (id, ex) -> id))                    
+|> Event.add(fun _ -> storageAgent.Ping())
 
 // post to processing agent if any task available
 storageAgent.TaskReady.Add(processingAgent.Post)

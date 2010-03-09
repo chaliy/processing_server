@@ -18,9 +18,9 @@ type DataItem() =
     let mutable key : string = ""
     [<DataMember(Name="Value", IsRequired = true, Order = 1)>]
     let mutable arg_value : string = ""
-
+    
     member public x.Key with get() = key
-    member public x.Value with get() = arg_value
+    member public x.Value with get() = arg_value    
 
 [<DataContract(Namespace="urn:org:mir:processing-v1.0")>]
 type Task() =  
@@ -38,11 +38,16 @@ type Task() =
 [<ServiceContract(Namespace = "urn:org:mir:processing-v1.0")>]
 type TaskProcessing =    
     [<OperationContract(IsOneWay = true)>]
-    abstract member Post : Task -> unit
+    abstract member Post : t : Task -> unit
 
 // **********************
 // *** Implementation ***
 // **********************
+
+[<ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)>]
+type TaskProcessingWrapper(service : TaskProcessing) =
+    interface TaskProcessing with
+        member gms.Post(t) = service.Post(t)
 
 type ServiceAgent() =
 
@@ -54,14 +59,15 @@ type ServiceAgent() =
           Handler = t.Handler
           Data = t.Data 
                  |> Seq.map(fun x -> (x.Key, x.Value :> obj))
-                 |> Seq.toList }
-    
+                 |> Seq.toList }    
+        
+            
     let service = { new TaskProcessing with
                         member gms.Post(t) = sync.Raise posted (convert t) }  
 
-    let baseAddress = Uri("http://localhost:1066/")                        
+    let baseAddress = Uri("http://localhost:1066/")
     let host =         
-        let host = new ServiceHost(service, baseAddress)
+        let host = new ServiceHost(new TaskProcessingWrapper(service), baseAddress)
         host.AddServiceEndpoint(typeof<TaskProcessing>,
             new WSHttpBinding(SecurityMode.Message), "") |> ignore
         host
