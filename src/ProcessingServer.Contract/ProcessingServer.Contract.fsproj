@@ -2,19 +2,18 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{e711ec79-021d-4cf0-834b-081c509f4398}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>ProcessingServer</RootNamespace>
-    <AssemblyName>ProcessingServer</AssemblyName>
+    <ProjectGuid>{2a950506-a278-495e-b35f-5f07b55d67ab}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ProcessingServer.Contract</RootNamespace>
+    <AssemblyName>ProcessingServer.Contract</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <Name>ProcessingServer</Name>
+    <Name>ProcessingServer.Contract</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,50 +21,27 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Debug\ProcessingServer.Contract.XML</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Release\EventSourcingServer.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\ProcessingServer.Contract.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MongoDB.Driver">
-      <HintPath>..\..\lib\MongoDB\MongoDB.Driver.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition">
-      <HintPath>..\..\lib\Composition\System.ComponentModel.Composition.dll</HintPath>
-    </Reference>
     <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Shared.fs" />
-    <Compile Include="MongoDB.fs" />
-    <Compile Include="Model.fs" />
-    <Compile Include="Handlers.fs" />
-    <Compile Include="Storage.fs" />
-    <Compile Include="Processing.fs" />
-    <Compile Include="Services.fs" />
-    <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ProcessingServer.Contract\ProcessingServer.Contract.fsproj">
-      <Name>ProcessingServer.Contract</Name>
-      <Project>{2a950506-a278-495e-b35f-5f07b55d67ab}</Project>
-      <Private>True</Private>
-    </ProjectReference>
+    <Compile Include="Contract.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

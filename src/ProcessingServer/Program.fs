@@ -29,8 +29,7 @@ processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
 // Ping storage agent may be we have new tasks
 processingAgent.Success
 |> Event.merge(processingAgent.Started)
-|> Event.merge(processingAgent.Failed 
-                    |> Event.map(fun (id, ex) -> id))                    
+|> Event.merge(processingAgent.Failed  |> Event.map fst )
 |> Event.add(fun _ -> storageAgent.Ping())
 
 // post to processing agent if any task available
@@ -50,6 +49,10 @@ let servceAgent = ServiceAgent();
 servceAgent.Posted.Add(storage.Post)
 servceAgent.Start()
 
+// **********************
+// *** And Console UI ***
+// **********************
+
 while true do
     let inp = System.Console.ReadLine()
     match inp with
@@ -62,3 +65,10 @@ while true do
                        Handler = "Example"
                        Data = [v "Input" inp ] } )
         storageAgent.Ping()
+
+
+(*
+ Load all stuff from tasks directory
+ Register all task handlers
+     
+*)

@@ -39,7 +39,7 @@ module ``Describe service agent`` =
         member x.Wait() = resEvent.WaitOne() |> ignore
 
     
-    let ``should listen for tasks`` = spec {
+    let ``listen for tasks`` = spec {
         
         let waiter  = Waiter<Model.Task>()
 
