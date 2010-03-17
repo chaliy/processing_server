@@ -1,6 +1,7 @@
 ﻿module MongoDB
 open Shared
 open MongoDB.Driver
+open System.Xml.Linq
 
 type Context =    
     abstract member Item : string -> MongoDB.Driver.Database with get    
@@ -37,3 +38,4 @@ type MongoDB.Driver.Document with
       member x.GetString key = x.[key] :?> string
       member x.GetID key = x.[key] :?> ID      
       member x.GetData key = (x.[key] :?> Document) |> values
+      member x.GetXml key = XElement.Parse((x.[key] :?> string))

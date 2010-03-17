@@ -48,9 +48,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProcessingServer.Contract\ProcessingServer.Contract.fsproj">
+    <ProjectReference Include="..\ProcessingServer.Contract\Contract.fsproj">
       <Project>{2A950506-A278-495E-B35F-5F07B55D67AB}</Project>
-      <Name>ProcessingServer.Contract</Name>
+      <Name>Contract</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

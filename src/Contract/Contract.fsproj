@@ -10,7 +10,7 @@
     <RootNamespace>ProcessingServer.Contract</RootNamespace>
     <AssemblyName>ProcessingServer.Contract</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <Name>ProcessingServer.Contract</Name>
+    <Name>Contract</Name>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

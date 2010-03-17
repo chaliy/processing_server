@@ -1,7 +1,6 @@
 ﻿namespace ProcessingServer.Contract
 
-type HandlerContext = {
-    Batch : string
+type HandlerContext = {    
     Data : System.Xml.Linq.XElement
 }
 

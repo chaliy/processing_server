@@ -1,9 +1,10 @@
 ﻿module Model
 
 open Shared
+open System.Xml.Linq
 
 type Task = {
     ID : ID
-    Data : (string * obj) list
+    Data : XElement
     Handler : string
 }

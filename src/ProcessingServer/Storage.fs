@@ -86,7 +86,7 @@ type TaskStorage() =
 
             Some({ ID = doc.GetID("_id")
                    Handler = doc.GetString("Handler")
-                   Data = doc.GetData("Data") })      
+                   Data = doc.GetXml("Data") })      
 
     let post t =
         printfn "TaskStorage : Post"
