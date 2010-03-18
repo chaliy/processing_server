@@ -21,6 +21,7 @@ let rec doc (inp) =
     let prep (x : obj) =
         match x with
         | :? ((string * obj) seq) as xx -> doc(xx) :> obj
+        | :? XElement as xx -> xx.ToString() :> obj        
         | x -> x
 
     let addend (d:Document) (k, v) = d.Append(k, prep(v))

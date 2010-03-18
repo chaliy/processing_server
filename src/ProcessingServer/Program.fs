@@ -18,7 +18,7 @@ let processingAgent = ProcessingAgent(handlerCatalog.ResolveAll())
 
 storage.Dump()
 
-// Write some debug
+// Write some debug info
 processingAgent.Started.Add(printfn "Started %s")
 processingAgent.Success.Add(printfn "Success %s")
 processingAgent.Failed.Add(fun (id, ex) -> printfn "Success %s - %s" id (ex.Message))
@@ -63,6 +63,12 @@ while true do
     | "Clean" -> storage.Clean()
     | x ->
         let id = Guid.NewGuid().ToString()
+        let data = System.Xml.Linq.XElement.Parse("<root />")
         storage.Post({ ID = id                       
-                       Data = null } )
+                       Data = data } )
         storageAgent.Ping()
+
+(* 
+    ProcessingAgent
+    -- Should poll    
+*)

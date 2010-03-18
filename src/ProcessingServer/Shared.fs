@@ -1,6 +1,10 @@
 ﻿module Shared
 
 open System.Threading
+open System.Threading.Tasks
+
+let thread run = 
+    new Task(new System.Action(fun () -> run()), TaskCreationOptions.PreferFairness)
  
 type ID = string
 type Agent<'T>(run : 'T -> unit) =
@@ -9,9 +13,10 @@ type Agent<'T>(run : 'T -> unit) =
                                                 let! x = inbox.Receive()    
                                                 run(x)
                                         })
-
+   
     member x.Start() = agent.Start()
     member x.Post = agent.Post
+    member x.QueueLength = agent.CurrentQueueLength
     
     interface System.IDisposable with
         member x.Dispose() = (agent :> System.IDisposable).Dispose()  
@@ -24,8 +29,7 @@ module SyncContext =
 
 type SynchronizationContext with 
     
-    member sync.Raise (event: Event<_>) args = 
-        //let mutable syncContext : SynchronizationContext = null
+    member sync.Raise (event: Event<_>) args =
         sync.Post((fun _ -> event.Trigger args), state = null)
 
 let v k d = (k, d :> obj)
