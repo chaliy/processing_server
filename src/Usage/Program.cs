@@ -1,4 +1,5 @@
-﻿using ProcessingServer;
+﻿using System;
+using ProcessingServer;
 using Task1Contract;
 
 namespace Usage
@@ -8,7 +9,11 @@ namespace Usage
 		static void Main(string[] args)
 		{
 			var msg = new Task1Msg();
-			Client.Post(msg);
+			for (var i = 0; i < 10; i++)
+			{
+				Client.Post(msg);
+				Console.WriteLine(i);
+			}			
 		}
 	}
 }

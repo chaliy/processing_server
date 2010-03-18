@@ -14,22 +14,29 @@ type ProcessingAgent(storage : TaskStorage,
     
     let mutable runnig = 0
 
+    let trace = new Event<string>()
     let started = new Event<ID>()
     let success = new Event<ID>()
-    let failed = new Event<ID * System.Exception>()
+    let failed = new Event<ID * System.Exception>()    
     let sync = SyncContext.Current()
 
+    let raiseTrace msg =
+        sync.Raise trace msg
+
     let raiseStarted id = 
+        raiseTrace (sprintf "ProcessingAgent: Task started %s" id)
         runnig <- runnig + 1
         sync.Raise started id
 
     let raiseSuccess id =         
+        raiseTrace (sprintf "ProcessingAgent: Task success %s" id)
         runnig <- runnig - 1
         sync.Raise success id        
 
     let raiseFailed id ex = 
+        raiseTrace (sprintf "ProcessingAgent: Task failed %s" id)
         runnig <- runnig - 1
-        sync.Raise failed (id, ex)    
+        sync.Raise failed (id, ex)           
 
     let createContext (t : Task) = { Data = t.Data }
     
@@ -39,7 +46,7 @@ type ProcessingAgent(storage : TaskStorage,
                       |> List.find(fun h -> h.CanHandle(ctx))
 
         thread (fun () -> 
-                raiseStarted task.ID  
+                raiseStarted task.ID
                 try
                     handler.Handle(ctx)
                     raiseSuccess task.ID
@@ -49,7 +56,7 @@ type ProcessingAgent(storage : TaskStorage,
     let pickTasks() =
         if (runnig < 10) then
             let tasks = storage.Pick2(10)
-            printfn "ProcessingAgent: Tasks recieved %i" tasks.Length
+            raiseTrace (sprintf "ProcessingAgent: Tasks recieved %i" tasks.Length)
                   
             tasks
             |> Seq.map(wrap)
@@ -59,3 +66,4 @@ type ProcessingAgent(storage : TaskStorage,
     member x.Started = started.Publish
     member x.Success = success.Publish
     member x.Failed = failed.Publish
+    member x.Trace = trace.Publish

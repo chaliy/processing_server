@@ -8,10 +8,8 @@ open System.Xml.Linq
 open System.Runtime.Serialization
 open System.ServiceModel
 
-type MessagePoster() =
-
-    let factory = new ChannelFactory<TaskProcessing>(WSHttpBinding())
-    let channel = factory.CreateChannel(EndpointAddress("http://localhost:1066/"))
+type MessagePoster() =    
+    
 
     let serialize msg = 
         use mem =  new MemoryStream()
@@ -25,7 +23,11 @@ type MessagePoster() =
         let task = Task()
         task.ID <- id
         task.Data <- serialize msg
+
+        use factory = new ChannelFactory<TaskProcessing>(WSHttpBinding())
+        let channel = factory.CreateChannel(EndpointAddress("http://localhost:1066/"))    
         channel.Post(task)
+
         id
         
     member x.Post = post

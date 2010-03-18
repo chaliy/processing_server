@@ -18,19 +18,16 @@ let processingAgent = ProcessingAgent(storage, handlerCatalog.ResolveAll())
 storage.Dump()
 
 // Write some debug info
-processingAgent.Started.Add(printfn "Started %s")
-processingAgent.Success.Add(printfn "Success %s")
-processingAgent.Failed.Add(fun (id, ex) -> printfn "Success %s - %s" id (ex.Message))
+processingAgent.Trace.Add(printfn "%s")
 
 // Store processing status
 processingAgent.Started.Add(storage.MarkStarted)
 processingAgent.Success.Add(storage.MarkSuccess)
 processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
 
-// Ping storage agent may be we have new tasks
-// This should be encapsulated intor processign agent
+// Ping agent may be we have new tasks
+// This should be encapsulated into processing agent
 processingAgent.Success
-|> Event.merge(processingAgent.Started)
 |> Event.merge(processingAgent.Failed  |> Event.map fst )
 |> Event.add(fun _ -> processingAgent.Ping())
 
