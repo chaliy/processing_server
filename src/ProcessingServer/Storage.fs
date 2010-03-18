@@ -56,8 +56,7 @@ type TaskStorage() =
         let tasks = ctx |> tasks
         tasks.Delete(new Document())                    
 
-    
-    let pick() : Option<Task> = 
+    let pick2(limit) : Task list = 
         printfn "TaskStorage : Pick"
         
         // Enter global lock
@@ -70,22 +69,37 @@ type TaskStorage() =
         
         use res = tasks.Find(doc [v "Status" (s Pending)])
                        .Sort("IssuedDate")
-                       .Limit(1)
+                       .Limit(limit)
                                                  
-        let docs = res.Documents |> Seq.toList
+        res.Documents 
+        |> Seq.toList
+        |> List.map(fun doc ->
+                    // Update status
+                    doc.["Status"] <- (s Picked)
+                    doc.["PickedDate"] <- DateTime.UtcNow
+                    tasks.Update(doc)
+
+                    { ID = doc.GetID("_id")                   
+                      Data = doc.GetXml("Data") } )
+
+
+    
+    let pick() : Option<Task> = 
+        printfn "TaskStorage : Pick"
+        
+        // Enter global lock
+        // Get most old pending task
+        // Mark them as Prepared with date
+        // Exit global lock
+                                                         
+        let docs = pick2(1)
 
         if docs.Length = 0 then
             printfn "TaskStorage : Nothing picked"
             None
         else                       
-            printfn "TaskStorage : Something picked"
-            let doc = docs.Head
-            doc.["Status"] <- (s Picked)
-            doc.["PickedDate"] <- DateTime.UtcNow
-            tasks.Update(doc)
-
-            Some({ ID = doc.GetID("_id")                   
-                   Data = doc.GetXml("Data") })      
+            printfn "TaskStorage : Something picked"            
+            Some(docs.Head)
 
     let post t =
         printfn "TaskStorage : Post"
@@ -119,6 +133,7 @@ type TaskStorage() =
                                                        v "FailedMessage" ex.Message]
     
     member x.Pick = pick
+    member x.Pick2 = pick2
     member x.Post = post
     member x.Dump = dump
     member x.Clean = clean

@@ -12,9 +12,8 @@ open System.Threading
 // *******************************
 
 let storage = TaskStorage()
-let storageAgent = StorageAgent(storage)
 let handlerCatalog = HandlerCatalog()
-let processingAgent = ProcessingAgent(handlerCatalog.ResolveAll())
+let processingAgent = ProcessingAgent(storage, handlerCatalog.ResolveAll())
 
 storage.Dump()
 
@@ -29,19 +28,14 @@ processingAgent.Success.Add(storage.MarkSuccess)
 processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
 
 // Ping storage agent may be we have new tasks
+// This should be encapsulated intor processign agent
 processingAgent.Success
 |> Event.merge(processingAgent.Started)
 |> Event.merge(processingAgent.Failed  |> Event.map fst )
-|> Event.add(fun _ -> storageAgent.Ping())
+|> Event.add(fun _ -> processingAgent.Ping())
 
-// post to processing agent if any task available
-storageAgent.TaskReady.Add(processingAgent.Post)
-
-processingAgent.Start()
-storageAgent.Start()
-
-// First ping
-storageAgent.Ping()
+// First ping, process all stuff and so on...
+processingAgent.Ping()
 
 // *******************************
 // ***  Wire-up listening part ***
@@ -49,6 +43,7 @@ storageAgent.Ping()
 
 let servceAgent = ServiceAgent();
 servceAgent.Posted.Add(storage.Post)
+servceAgent.Posted.Add(fun _ -> processingAgent.Ping())
 servceAgent.Start()
 
 // **********************
@@ -59,16 +54,11 @@ while true do
     let inp = System.Console.ReadLine()
     match inp with
     | "Dump" -> storage.Dump()
-    | "Ping" -> storageAgent.Ping()
+    | "Ping" -> processingAgent.Ping()
     | "Clean" -> storage.Clean()
     | x ->
         let id = Guid.NewGuid().ToString()
         let data = System.Xml.Linq.XElement.Parse("<root />")
         storage.Post({ ID = id                       
                        Data = data } )
-        storageAgent.Ping()
-
-(* 
-    ProcessingAgent
-    -- Should poll    
-*)
+        processingAgent.Ping()

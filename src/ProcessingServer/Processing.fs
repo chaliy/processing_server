@@ -9,25 +9,9 @@ open System
 open System.Threading
 open System.Xml.Linq
 
-type StorageAgent(storage : TaskStorage) =
-
-    let taskReady = new Event<Task>()
-    let sync = SyncContext.Current()
-
-    let agent = 
-        new Agent<_>(fun _ ->                            
-                        printfn "StorageAgent: Ping recieved"    
-                        let task = storage.Pick()
-                        if task.IsSome then
-                            task.Value |> sync.Raise taskReady )                            
-    
-    member x.Ping() = agent.Post()
-    member x.Start() = agent.Start()
-    member x.TaskReady = taskReady.Publish
-
-type ProcessingAgent2(storage : TaskStorage,
+type ProcessingAgent(storage : TaskStorage,
                       handlers : ITaskHandler list) =
-
+    
     let mutable runnig = 0
 
     let started = new Event<ID>()
@@ -39,18 +23,17 @@ type ProcessingAgent2(storage : TaskStorage,
         runnig <- runnig + 1
         sync.Raise started id
 
-    let raiseSuccess id = 
+    let raiseSuccess id =         
         runnig <- runnig - 1
-        sync.Raise success id
+        sync.Raise success id        
 
     let raiseFailed id ex = 
         runnig <- runnig - 1
-        sync.Raise failed (id, ex)
+        sync.Raise failed (id, ex)    
 
     let createContext (t : Task) = { Data = t.Data }
     
-    let wrap task = 
-        printfn "ProcessingAgent: New task recieved"                     
+    let wrap task =                        
         let ctx = createContext task
         let handler = handlers 
                       |> List.find(fun h -> h.CanHandle(ctx))
@@ -61,35 +44,18 @@ type ProcessingAgent2(storage : TaskStorage,
                     handler.Handle(ctx)
                     raiseSuccess task.ID
                 with
-                | x -> raiseFailed task.ID x )
+                | x -> raiseFailed task.ID x )    
 
+    let pickTasks() =
+        if (runnig < 10) then
+            let tasks = storage.Pick2(10)
+            printfn "ProcessingAgent: Tasks recieved %i" tasks.Length
+                  
+            tasks
+            |> Seq.map(wrap)
+            |> Seq.iter(fun t -> t.Start())        
 
-type ProcessingAgent(handlers : ITaskHandler list) =
-       
-    let started = new Event<ID>()
-    let success = new Event<ID>()
-    let failed = new Event<ID * System.Exception>()
-    let sync = SyncContext.Current()
-
-    let createContext (t : Task) = { Data = t.Data }
-        
-    let agent = 
-        new Agent<Task>(fun task ->                                                               
-                            printfn "ProcessingAgent: New task recieved"                     
-                            let ctx = createContext task
-                            let handler = handlers 
-                                          |> List.find(fun h -> h.CanHandle(ctx))
-
-                            sync.Raise started task.ID  
-                            try
-                                handler.Handle(ctx)
-                                sync.Raise success task.ID
-                            with
-                            | x -> sync.Raise failed (task.ID, x) ) 
-                                  
-
-    member x.Post msg = agent.Post msg
-    member x.Start() = agent.Start()
+    member x.Ping = pickTasks
     member x.Started = started.Publish
     member x.Success = success.Publish
     member x.Failed = failed.Publish
