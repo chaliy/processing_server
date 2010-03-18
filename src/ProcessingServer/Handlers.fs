@@ -1,7 +1,7 @@
 ﻿module Handlers
 
 open Shared
-open ProcessingServer.Contract
+open ProcessingServer.Handling
 open System.Reflection
 open System.ComponentModel.Composition.Hosting
 
@@ -14,6 +14,6 @@ type HandlerCatalog() =
         aggregateCatalog.Catalogs.Add(directoryCatalog)
         aggregateCatalog.Catalogs.Add(assemblyCatalog) 
         let container = new CompositionContainer(aggregateCatalog)
-        container.GetExportedValues<ITaskHandler>()        
+        container.GetExportedValues<ITaskHandler>() |> Seq.toList       
 
     member x.ResolveAll = resolveAll

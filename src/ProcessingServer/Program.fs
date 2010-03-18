@@ -3,6 +3,7 @@ open Model
 open Storage
 open Processing
 open Services
+open Handlers
 open System
 open System.Threading
 
@@ -12,7 +13,8 @@ open System.Threading
 
 let storage = TaskStorage()
 let storageAgent = StorageAgent(storage)
-let processingAgent = ProcessingAgent()
+let handlerCatalog = HandlerCatalog()
+let processingAgent = ProcessingAgent(handlerCatalog.ResolveAll())
 
 storage.Dump()
 
@@ -61,14 +63,6 @@ while true do
     | "Clean" -> storage.Clean()
     | x ->
         let id = Guid.NewGuid().ToString()
-        storage.Post({ ID = id
-                       Handler = "Example"
-                       Data = [v "Input" inp ] } )
+        storage.Post({ ID = id                       
+                       Data = null } )
         storageAgent.Ping()
-
-
-(*
- Load all stuff from tasks directory
- Register all task handlers
-     
-*)

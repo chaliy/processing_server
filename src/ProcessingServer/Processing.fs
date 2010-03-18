@@ -3,7 +3,7 @@
 open Shared
 open Model
 open Storage
-open ProcessingServer.Contract
+open ProcessingServer.Handling
 
 open System
 open System.Threading
@@ -31,12 +31,6 @@ type ProcessingAgent(handlers : ITaskHandler list) =
     let success = new Event<ID>()
     let failed = new Event<ID * System.Exception>()
     let sync = SyncContext.Current()
-
-//    let resolveHadler t = (fun (data : XElement) ->                             
-//                            printfn "Executing: %s" t.ID
-//                            data |> Seq.iter(fun (k, v) -> printfn "Data: %s - %s" k (v.ToString()))                            
-//                            Thread.Sleep(1000); 
-//                            ())
 
     let createContext (t : Task) = { Data = t.Data }
         

@@ -5,9 +5,11 @@ open System
 open System.Collections.Generic
 open System.ServiceModel
 open System.Threading
+open System.Xml.Linq
         
 open Shared
 open Services
+open ProcessingServer.Contract
 
 let createClient() =
     let factory = new ChannelFactory<TaskProcessing>(new WSHttpBinding())
@@ -48,9 +50,8 @@ module ``Describe service agent`` =
         let client = createClient()
 
         let task = new Task()
-        task.ID <- "NewID"
-        task.Handler <- "Example"
-        task.Data <- new List<DataItem>()
+        task.ID <- "NewID"        
+        task.Data <- XElement.Parse("<data />")
         client.Post(task)
 
         waiter.Wait()

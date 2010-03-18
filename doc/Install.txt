@@ -1,0 +1,3 @@
+# Install MongoDB
+
+C:\mongodb\bin\mongod.exe -install

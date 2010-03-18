@@ -84,16 +84,14 @@ type TaskStorage() =
             doc.["PickedDate"] <- DateTime.UtcNow
             tasks.Update(doc)
 
-            Some({ ID = doc.GetID("_id")
-                   Handler = doc.GetString("Handler")
+            Some({ ID = doc.GetID("_id")                   
                    Data = doc.GetXml("Data") })      
 
     let post t =
         printfn "TaskStorage : Post"
         use ctx = connect()
         let tasks = ctx |> tasks
-        tasks.Insert(doc [v "_id" t.ID
-                          v "Handler" t.Handler
+        tasks.Insert(doc [v "_id" t.ID                          
                           v "Status" (s Pending)
                           v "IssuedDate" DateTime.UtcNow
                           v "Data" t.Data])

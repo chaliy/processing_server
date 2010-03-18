@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.Composition;
-using ProcessingServer.Contract;
+using ProcessingServer.Handling;
 
 namespace Task1
 {

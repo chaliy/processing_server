@@ -5,6 +5,5 @@ open System.Xml.Linq
 
 type Task = {
     ID : ID
-    Data : XElement
-    Handler : string
+    Data : XElement    
 }
