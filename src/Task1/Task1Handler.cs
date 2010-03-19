@@ -9,7 +9,7 @@ namespace Task1
 	public class Task1Handler : ITaskHandler
 	{
 		public bool CanHandle(IHandlerContext ctx)
-		{			
+		{
 			return true;
 		}
 

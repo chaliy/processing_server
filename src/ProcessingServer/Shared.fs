@@ -45,7 +45,8 @@ type Tracing() =
 
     member x.Trace(msg) = 
         
-        agent.Post (msg + "; Th: " + Thread.CurrentThread.ManagedThreadId.ToString())
+        agent.Post (msg + 
+            "; (th: " + Thread.CurrentThread.ManagedThreadId.ToString() + ")")
 
 
 type Trottler(interval) =
