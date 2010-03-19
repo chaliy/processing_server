@@ -8,19 +8,19 @@ namespace Task1
 	[Export(typeof(ITaskHandler))]
 	public class Task1Handler : ITaskHandler
 	{
-		public bool CanHandle(HandlerContext arg)
+		public bool CanHandle(IHandlerContext ctx)
 		{			
 			return true;
 		}
 
-		public void Handle(HandlerContext arg)
+		public void Handle(IHandlerContext ctx)
 		{
-			Console.WriteLine("Task1 handler staring! Yay!");
-			for(var i = 0; i < 500000; i++)
+			ctx.Trace("Task1 handler staring! Yay!");			
+			for(var i = 0; i < 100000; i++)
 			{
 				Regex.IsMatch(Guid.NewGuid().ToString(), i.ToString());
 			}
-			Console.WriteLine("Task1 handler completed! Yay-yay!");
+			ctx.Trace("Task1 handler completed! Yay-yay!");
 		}
 	}
 }

@@ -28,7 +28,7 @@ type TaskStatus =
 //    FailedMessage : Option<string>
 //}
 
-type TaskStorage() =    
+type TaskStorage(tracing : Tracing) =    
 
     let s = function
             | Pending -> "Pending"
@@ -40,30 +40,25 @@ type TaskStorage() =
     let tasks (ctx : Context) = ctx.["ProcessingTasks"].["Tasks"]
     
     let dump() =
-        printfn "TaskStorage : Dump"
+        tracing.Trace "TaskStorage : Dump"
 
         use ctx = connect()
         let tasks = ctx |> tasks            
 
         tasks.FindAll().Documents
         |> Seq.map(fun d -> d.ToString())
-        |> Seq.iter(printfn "%s")
+        |> Seq.iter(tracing.Trace)
 
     let clean() =
-        printfn "TaskStorage : Clean"
+        tracing.Trace "TaskStorage : Clean"
 
         use ctx = connect()        
         let tasks = ctx |> tasks
         tasks.Delete(new Document())                    
 
-    let pick2(limit) : Task list = 
-        printfn "TaskStorage : Pick"
-        
-        // Enter global lock
-        // Get most old pending task
-        // Mark them as Prepared with date
-        // Exit global lock
-
+    let pick(limit) : Task list = 
+        tracing.Trace "TaskStorage : Pick"
+                
         use ctx = connect()
         let tasks = ctx |> tasks
         
@@ -81,28 +76,9 @@ type TaskStorage() =
 
                     { ID = doc.GetID("_id")                   
                       Data = doc.GetXml("Data") } )
-
-
     
-    let pick() : Option<Task> = 
-        printfn "TaskStorage : Pick"
-        
-        // Enter global lock
-        // Get most old pending task
-        // Mark them as Prepared with date
-        // Exit global lock
-                                                         
-        let docs = pick2(1)
-
-        if docs.Length = 0 then
-            printfn "TaskStorage : Nothing picked"
-            None
-        else                       
-            printfn "TaskStorage : Something picked"            
-            Some(docs.Head)
-
     let post t =
-        printfn "TaskStorage : Post"
+        tracing.Trace "TaskStorage : Post"
         use ctx = connect()
         let tasks = ctx |> tasks
         tasks.Insert(doc [v "_id" t.ID                          
@@ -132,8 +108,7 @@ type TaskStorage() =
                                                        v "FailedDate" DateTime.UtcNow
                                                        v "FailedMessage" ex.Message]
     
-    member x.Pick = pick
-    member x.Pick2 = pick2
+    member x.Pick = pick    
     member x.Post = post
     member x.Dump = dump
     member x.Clean = clean

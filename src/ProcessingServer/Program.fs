@@ -11,28 +11,14 @@ open System.Threading
 // *** Wire-up processing part ***
 // *******************************
 
-let storage = TaskStorage()
+let tracing = Tracing()
+let storage = TaskStorage(tracing)
 let handlerCatalog = HandlerCatalog()
-let processingAgent = ProcessingAgent(storage, handlerCatalog.ResolveAll())
-
-storage.Dump()
-
-// Write some debug info
-processingAgent.Trace.Add(printfn "%s")
-
-// Store processing status
-processingAgent.Started.Add(storage.MarkStarted)
-processingAgent.Success.Add(storage.MarkSuccess)
-processingAgent.Failed.Add(fun (id, ex) -> storage.MarkFailed id ex)
-
-// Ping agent may be we have new tasks
-// This should be encapsulated into processing agent
-processingAgent.Success
-|> Event.merge(processingAgent.Failed  |> Event.map fst )
-|> Event.add(fun _ -> processingAgent.Ping())
+let handlers = handlerCatalog.ResolveAll()
+let processingAgent = ProcessingAgent(storage, handlers, tracing)
 
 // First ping, process all stuff and so on...
-processingAgent.Ping()
+processingAgent.Start()
 
 // *******************************
 // ***  Wire-up listening part ***
@@ -40,6 +26,7 @@ processingAgent.Ping()
 
 let servceAgent = ServiceAgent();
 servceAgent.Posted.Add(storage.Post)
+// Notifiy ptocessor about potential tasks.
 servceAgent.Posted.Add(fun _ -> processingAgent.Ping())
 servceAgent.Start()
 

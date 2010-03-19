@@ -1,9 +1,9 @@
 ﻿namespace ProcessingServer.Handling
 
-type HandlerContext = {    
-    Data : System.Xml.Linq.XElement
-}
+type IHandlerContext =
+    abstract member Data : System.Xml.Linq.XElement
+    abstract member Trace : string -> unit
 
 type ITaskHandler =
-    abstract member CanHandle : HandlerContext -> bool
-    abstract member Handle : HandlerContext -> unit   
+    abstract member CanHandle : IHandlerContext -> bool
+    abstract member Handle : IHandlerContext -> unit   

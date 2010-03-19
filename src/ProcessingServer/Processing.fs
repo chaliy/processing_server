@@ -8,37 +8,26 @@ open ProcessingServer.Handling
 open System
 open System.Threading
 open System.Xml.Linq
+open System.Diagnostics
 
 type ProcessingAgent(storage : TaskStorage,
-                      handlers : ITaskHandler list) =
+                     handlers : ITaskHandler list,
+                     tracing : Tracing) =
     
     let mutable runnig = 0
-
-    let trace = new Event<string>()
-    let started = new Event<ID>()
-    let success = new Event<ID>()
-    let failed = new Event<ID * System.Exception>()    
+    
+    let storageLock = obj()
+    let statsLock = obj()    
     let sync = SyncContext.Current()
+    let pingTrottler = new Trottler(TimeSpan.FromMilliseconds(500.0))    
 
-    let raiseTrace msg =
-        sync.Raise trace msg
+    let trace msg =
+        tracing.Trace msg
 
-    let raiseStarted id = 
-        raiseTrace (sprintf "ProcessingAgent: Task started %s" id)
-        runnig <- runnig + 1
-        sync.Raise started id
-
-    let raiseSuccess id =         
-        raiseTrace (sprintf "ProcessingAgent: Task success %s" id)
-        runnig <- runnig - 1
-        sync.Raise success id        
-
-    let raiseFailed id ex = 
-        raiseTrace (sprintf "ProcessingAgent: Task failed %s" id)
-        runnig <- runnig - 1
-        sync.Raise failed (id, ex)           
-
-    let createContext (t : Task) = { Data = t.Data }
+    let createContext (t : Task) = 
+        { new IHandlerContext with
+            member x.Data = t.Data
+            member x.Trace(msg) = trace(msg) }
     
     let wrap task =                        
         let ctx = createContext task
@@ -46,24 +35,42 @@ type ProcessingAgent(storage : TaskStorage,
                       |> List.find(fun h -> h.CanHandle(ctx))
 
         thread (fun () -> 
-                raiseStarted task.ID
+                let id = task.ID
+                
+                trace (sprintf "ProcessingAgent: Task started %s" id)
+                lock statsLock (fun () -> runnig <- runnig + 1 ) // Stats
+                storage.MarkStarted id
+                let sw = new Stopwatch()
+                sw.Start()
+                                
                 try
                     handler.Handle(ctx)
-                    raiseSuccess task.ID
+                    
+                    sw.Stop() |> ignore
+                    trace (sprintf "ProcessingAgent: Task success %s (Time: %i ms)" id sw.ElapsedMilliseconds)
+                    lock statsLock (fun () -> runnig <- runnig - 1 ) // Stats
+                    storage.MarkSuccess id
+                    pingTrottler.Ping()
                 with
-                | x -> raiseFailed task.ID x )    
+                | x -> 
+                    trace (sprintf "ProcessingAgent: Task failed %s" id)
+                    lock statsLock (fun () -> runnig <- runnig - 1 ) // Stats
+                    storage.MarkFailed id x                            
+                    pingTrottler.Ping() )
 
     let pickTasks() =
-        if (runnig < 10) then
-            let tasks = storage.Pick2(10)
-            raiseTrace (sprintf "ProcessingAgent: Tasks recieved %i" tasks.Length)
+        trace "ProcessingAgent: Ping"
+        if (runnig < 10) then            
+            let tasks = lock storageLock (fun () -> storage.Pick(10))
+            trace (sprintf "ProcessingAgent: Tasks recieved %i" tasks.Length)
                   
             tasks
             |> Seq.map(wrap)
-            |> Seq.iter(fun t -> t.Start())        
+            |> Seq.iter(fun t -> t.Start())
 
-    member x.Ping = pickTasks
-    member x.Started = started.Publish
-    member x.Success = success.Publish
-    member x.Failed = failed.Publish
-    member x.Trace = trace.Publish
+    let start() =
+        pingTrottler.Pushed.Add(fun _ -> pickTasks())
+        pingTrottler.Ping()
+
+    member x.Ping = pingTrottler.Ping
+    member x.Start = start
