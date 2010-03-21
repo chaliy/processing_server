@@ -45,6 +45,16 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Client\Client.fsproj">
+      <Name>Client</Name>
+      <Project>{24b5340e-f545-434e-a67d-eaac3de9b8e6}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Contract\Contract.fsproj">
+      <Name>Contract</Name>
+      <Project>{2a950506-a278-495e-b35f-5f07b55d67ab}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ProcessingServer\ProcessingServer.fsproj">
       <Name>ProcessingServer</Name>
       <Project>{e711ec79-021d-4cf0-834b-081c509f4398}</Project>

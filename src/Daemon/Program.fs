@@ -30,6 +30,14 @@ servceAgent.Posted.Add(storage.Post)
 servceAgent.Posted.Add(fun _ -> processingAgent.Ping())
 servceAgent.Start()
 
+// *******************************
+// ***  Wire-up reporting part ***
+// *******************************
+
+let statsServiceAgent = StatsServiceAgent(storage)
+statsServiceAgent.Start()
+
+
 // **********************
 // *** And Console UI ***
 // **********************
