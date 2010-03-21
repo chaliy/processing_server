@@ -7,11 +7,13 @@ namespace Usage
 	class Program
 	{
 		static void Main(string[] args)
-		{
-			var msg = new Task1Msg();
-			for (var i = 0; i < 300; i++)
+		{			
+			for (var i = 0; i < 5; i++)
 			{
-				Client.Post(msg);
+				Client.Post(new Task1Msg
+				            	{
+				            		Data = Guid.NewGuid().ToString()
+				            	}, "TestContext");
 				Console.WriteLine(i);
 			}						
 		}

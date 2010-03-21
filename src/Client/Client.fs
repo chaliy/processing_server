@@ -18,11 +18,12 @@ type MessagePoster() =
         mem.Position <- int64 0
         XElement.Load(new XmlTextReader(mem))
 
-    let post msg =
+    let post(msg, (tags : string array)) =
         let id = System.Guid.NewGuid().ToString()
         let task = Task()
         task.ID <- id
         task.Data <- serialize msg
+        task.Tags <- tags |> Array.toList
 
         use factory = new ChannelFactory<TaskProcessing>(WSHttpBinding())
         let channel = factory.CreateChannel(EndpointAddress("http://localhost:1066/"))    
@@ -32,5 +33,5 @@ type MessagePoster() =
         
     member x.Post = post
 
-let Post msg = MessagePoster().Post(msg)
+let Post(msg, [<System.ParamArray>] tags) = MessagePoster().Post(msg, tags)
 

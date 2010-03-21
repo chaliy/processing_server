@@ -85,7 +85,8 @@ type TaskStorage(tracing : Tracing) =
         tasks.Insert(doc [v "_id" t.ID                          
                           v "Status" (s Pending)
                           v "IssuedDate" DateTime.UtcNow
-                          v "Data" t.Data])
+                          v "Data" t.Data
+                          v "Tags" t.Tags ])
 
     let byId id = 
         doc [v "_id" id]

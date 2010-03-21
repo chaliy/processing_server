@@ -45,4 +45,7 @@ type MongoDB.Driver.Document with
       member x.GetXml key = match x.[key] with
                             | :? string as x -> XElement.Parse(x)
                             | _ -> failwith "Cannot get XML from given value"
-      member x.GetStringList key = (x.[key] :?> string list)
+      member x.GetStringList key = match x.[key] with
+                                   | :? (string array) as x -> x |> Array.toList
+                                   | null -> []
+                                   | _ -> failwith "Cannot get string list from given value"
