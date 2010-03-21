@@ -6,7 +6,7 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{e711ec79-021d-4cf0-834b-081c509f4398}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>ProcessingServer</RootNamespace>
     <AssemblyName>ProcessingServer</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
@@ -66,7 +66,6 @@
     <Compile Include="Storage.fs" />
     <Compile Include="Processing.fs" />
     <Compile Include="Services.fs" />
-    <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Contract\Contract.fsproj">

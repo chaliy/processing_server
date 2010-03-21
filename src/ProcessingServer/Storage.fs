@@ -43,7 +43,7 @@ type TaskStorage(tracing : Tracing) =
         tracing.Trace "TaskStorage : Dump"
 
         use ctx = connect()
-        let tasks = ctx |> tasks            
+        let tasks = ctx |> tasks
 
         tasks.FindAll().Documents
         |> Seq.map(fun d -> d.ToString())

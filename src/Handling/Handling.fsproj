@@ -8,7 +8,7 @@
     <ProjectGuid>{9da2c738-1ec2-427c-ae80-bdbe0f295f10}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Handling</RootNamespace>
-    <AssemblyName>Handling</AssemblyName>
+    <AssemblyName>ProcessingServer.Handling</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <Name>Handling</Name>
     <TargetFrameworkProfile />

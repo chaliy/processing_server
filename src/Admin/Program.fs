@@ -14,14 +14,16 @@ open System.Threading
 let tracing = Tracing()
 let storage = TaskStorage(tracing)
 
+let args = System.Environment.GetCommandLineArgs()
+let command = 
+    if args.Length = 1 then
+        printfn "And what do you want?"
+        System.Console.ReadLine()
+    else
+        args.[1]
 
-// **********************
-// *** And Console UI ***
-// **********************
-let mutable inloop = true
-while inloop do
-    let inp = System.Console.ReadLine()
-    match inp with
-    | "Dump" -> storage.Dump()    
-    | "Clean" -> storage.Clean()
-    | _ -> printfn "Invalid command, try again"
+match command.ToLower() with
+| "dump" -> storage.Dump()    
+| "clean" -> storage.Clean()
+| _ -> printfn "Invalid command, try next time!"
+
