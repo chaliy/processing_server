@@ -7,10 +7,11 @@ namespace Usage
 	class Program
 	{
 		static void Main(string[] args)
-		{			
+		{
+			var client = new Client.TaskProcessingClient("http://localhost:1066");
 			for (var i = 0; i < 5; i++)
 			{
-				Client.Post(new Task1Msg
+				client.Post(new Task1Msg
 				            	{
 				            		Data = Guid.NewGuid().ToString()
 				            	}, "TestContext");

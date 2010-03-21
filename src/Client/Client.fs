@@ -8,15 +8,14 @@ open System.Xml.Linq
 open System.Runtime.Serialization
 open System.ServiceModel
 
-module ServiceUtils =
-
-    let Execute<'a, 'r> (url : string) (block : 'a -> 'r) =
-        use factory = new ChannelFactory<'a>(WSHttpBinding())
-        let channel = factory.CreateChannel(EndpointAddress(url))    
-        block(channel)
+let Execute<'a, 'r> (server : string) url (block : 'a -> 'r) =                
+    let builder = System.UriBuilder(server)
+    builder.Path <- url    
+    use factory = new ChannelFactory<'a>(WSHttpBinding())
+    let channel = factory.CreateChannel(EndpointAddress(builder.Uri))    
+    block(channel)        
                    
-
-type TaskProcessingClient() =    
+type TaskProcessingClient(server : string) =    
     
     let serialize msg = 
         use mem =  new MemoryStream()
@@ -32,31 +31,20 @@ type TaskProcessingClient() =
         task.Data <- serialize msg
         task.Tags <- tags |> Array.toList
 
-        ServiceUtils.Execute<TaskProcessing, unit> 
-            "http://localhost:1066/TaskProcessing/"
-            (fun channel -> channel.Post(task))
+        Execute<TaskProcessing, _> 
+            server "TaskProcessing/" (fun ch -> ch.Post(task))
 
         id
         
-    member x.Post = post
+    member x.Post(msg, [<System.ParamArray>] tags) = post(msg, tags)
 
-type TaskProcessingStatsClient() =
+type TaskProcessingStatsClient(server : string) =
     
     let queryOveralStats (tags : string array) =        
         let spec = OveralStatsQuerySpec()
         spec.Tags <- tags |> Array.toList
 
-        ServiceUtils.Execute<TaskProcessingStats, OveralStats> 
-            "http://localhost:1066/TaskProcessingStats/"
-            (fun channel -> channel.QueryOveralStats(spec))
+        Execute<TaskProcessingStats, _> 
+            server "TaskProcessingStats/" (fun ch -> ch.QueryOveralStats(spec))
                     
-    member x.QueryOveralStats = queryOveralStats
-
-// ********************
-// ***  Public API  ***
-// ********************
-let Post(msg, [<System.ParamArray>] tags) = 
-    TaskProcessingClient().Post(msg, tags)
-
-let QueryOveralStats([<System.ParamArray>] tags) = 
-    TaskProcessingStatsClient().QueryOveralStats(tags)
+    member x.QueryOveralStats([<System.ParamArray>] tags) = queryOveralStats(tags)

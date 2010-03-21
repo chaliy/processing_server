@@ -47,4 +47,5 @@ type OveralStatsQuerySpec() =
 
 [<ServiceContract(Namespace = "urn:org:mir:processing-v1.0")>]
 type TaskProcessingStats =        
+    [<OperationContract>]
     abstract member QueryOveralStats : spec:OveralStatsQuerySpec -> OveralStats

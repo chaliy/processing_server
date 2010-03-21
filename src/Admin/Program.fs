@@ -4,6 +4,7 @@ open Storage
 open Processing
 open Services
 open Handlers
+
 open System
 open System.Threading
 
@@ -26,8 +27,7 @@ match command.ToLower() with
 | "dump" -> storage.Dump()    
 | "clean" -> storage.Clean()
 | "stats" -> 
-            let stats = ProcessingServer.Client.QueryOveralStats([||])
+            let stats = ProcessingServer.Client.TaskProcessingStatsClient("http://localhost:1066").QueryOveralStats([||])
             printfn "Running: %i; Pending: %i; Completed: %i; Failed: %i" 
                 stats.Runnig stats.Pending stats.Completed stats.Failed
 | _ -> printfn "Invalid command, try next time!"
-

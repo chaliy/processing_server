@@ -17,10 +17,10 @@ open ProcessingServer.Contract
 // **********************
 
 module ServiceUtils =
-    let baseAddress = Uri("http://localhost:1066/")
+    let baseAddress = "http://localhost:1066/"
     let CreateHost<'a>(url:string, impl:'a) =
-        let host = new ServiceHost(impl, baseAddress)
-        host.AddServiceEndpoint(typeof<'a>, new WSHttpBinding(SecurityMode.Message), url) |> ignore
+        let host = new ServiceHost(impl, Uri(baseAddress + url))
+        host.AddServiceEndpoint(typeof<'a>, new WSHttpBinding(SecurityMode.Message), "") |> ignore
         host
 
 [<ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)>]
@@ -37,32 +37,31 @@ type ServiceAgent() =
         { ID = t.ID
           Data = t.Data
           Tags = t.Tags }        
-        
-            
+                    
     let service = { new TaskProcessing with
-                                    member gms.Post(t) = sync.Raise posted (convert t) }      
+                        member gms.Post(t) = sync.Raise posted (convert t) }      
 
-    let host = ServiceUtils.CreateHost("TaskProcessing", TaskProcessingWrapper(service))
+    let host = ServiceUtils.CreateHost<TaskProcessing>("TaskProcessing", TaskProcessingWrapper(service))
         
     member x.Start() = host.Open()
     member x.Posted = posted.Publish
 
 [<ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)>]
-type TaskProcessingStatsWrapper(service : TaskProcessingStats) =
-    interface TaskProcessingStats with
-        member gms.QueryOveralStats(spec) = service.QueryOveralStats(spec)
-
-type StatsServiceAgent(storage : TaskStorage) =
+type TaskProcessingStatsService(storage : TaskStorage) =
 
     let queryOveralStats spec =
         let stats = new OveralStats()
         stats.Runnig <- 1
         stats.Completed <- 100
         stats
-    
-    let service = { new TaskProcessingStats with
-                        member gms.QueryOveralStats(spec) = queryOveralStats spec }      
 
-    let host = ServiceUtils.CreateHost("TaskProcessingStats", TaskProcessingStatsWrapper(service))
+    interface TaskProcessingStats with
+        member gms.QueryOveralStats(spec) = queryOveralStats(spec)
+
+type StatsServiceAgent(storage : TaskStorage) =
+
+    let service = TaskProcessingStatsService(storage) 
+
+    let host = ServiceUtils.CreateHost<TaskProcessingStats>("TaskProcessingStats", service)
         
     member x.Start() = host.Open()    
