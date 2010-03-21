@@ -33,14 +33,23 @@ servceAgent.Start()
 // **********************
 // *** And Console UI ***
 // **********************
-let mutable inloop = true
-while inloop do
+let inloop = ref true
+
+// Ctrl+C should stop daemon
+Console.TreatControlCAsInput <- false
+Console.CancelKeyPress.Add(fun e -> 
+                            e.Cancel <- true
+                            inloop := false
+                            (* processingAgent.Stop() *) )
+
+while inloop.Value do
     let inp = System.Console.ReadLine()
     match inp with
     | "Dump" -> storage.Dump()    
     | "Clean" -> storage.Clean()
     | "Ping" -> processingAgent.Ping()
-    | "Stop" -> inloop <- false
-    | _ -> printfn "Invalid command, try again" 
+    | "Stop" -> inloop := false
+    | null -> ()
+    | _ -> printfn "Invalid command, try again"
 
 processingAgent.Stop()

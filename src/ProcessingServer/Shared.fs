@@ -1,11 +1,7 @@
 ﻿module Shared
 
 open System.Threading
-open System.Threading.Tasks
 
-let thread run = 
-    new Task(new System.Action(fun () -> run()), TaskCreationOptions.PreferFairness)
- 
 type ID = string
 type Agent<'a>(run : 'a -> unit) =
     let agent = new MailboxProcessor<'a>(fun inbox -> async { 
@@ -54,7 +50,7 @@ type Trottler(interval) =
     let pushed = new Event<_>()
     let sync = SyncContext.Current()
 
-    let mutable lastPush = System.DateTime.UtcNow
+    let mutable lastPush = System.DateTime.UtcNow.AddDays(-1.0)
     let mutable pending = false    
 
     let stateLock = new obj()

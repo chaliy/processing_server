@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Task12Handler.cs" />
     <Compile Include="Task1Handler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -51,10 +52,15 @@
       <Project>{9DA2C738-1EC2-427C-AE80-BDBE0F295F10}</Project>
       <Name>Handling</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Task1Contract\Task1Contract.csproj">
+      <Project>{1FC31D3F-87BD-451D-8015-163FE80571F6}</Project>
+      <Name>Task1Contract</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /Y $(TargetPath) $(SolutionDir)Daemon\bin\Debug\</PostBuildEvent>
+    <PostBuildEvent>xcopy /Y $(TargetPath) $(SolutionDir)Daemon\bin\Debug\
+xcopy /Y $(TargetDir)Task1Contract.dll $(SolutionDir)Daemon\bin\Debug\</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

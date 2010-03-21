@@ -100,7 +100,7 @@ type ProcessingAgent(storage : TaskStorage,
         pingTrottler.Ping()
 
     let stop() =
-        trace "ProcessingAgent: Stop"
+        trace "ProcessingAgent: Stop"        
         stopping <- true        
         Executable.WaitAll(all.ToArray())
         trace "ProcessingAgent: Stoped!"
