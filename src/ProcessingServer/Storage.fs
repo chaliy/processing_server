@@ -17,8 +17,8 @@ type TaskStatus =
 // For reference purposes
 //type TaskRecord = {
 //    ID : ID
-//    Data : (string * obj) list
-//    Handler : string
+//    Data : XElement
+//    Tags : string list
 //    Status : TaskStatus
 //    IssuedDate : DateTime        
 //    PickedDate : Option<DateTime>
@@ -74,8 +74,9 @@ type TaskStorage(tracing : Tracing) =
                     doc.["PickedDate"] <- DateTime.UtcNow
                     tasks.Update(doc)
 
-                    { ID = doc.GetID("_id")                   
-                      Data = doc.GetXml("Data") } )
+                    { ID = doc.GetID("_id")      
+                      Data = doc.GetXml("Data")
+                      Tags = doc.GetStringList("Tags") } )
     
     let post t =
         tracing.Trace "TaskStorage : Post"

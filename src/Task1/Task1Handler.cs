@@ -16,11 +16,11 @@ namespace Task1
 		public void Handle(IHandlerContext ctx)
 		{
 			ctx.Trace("Task1 handler staring! Yay!");			
-			for(var i = 0; i < 100000; i++)
+			for(var i = 0; i < 500000; i++)
 			{
 				Regex.IsMatch(Guid.NewGuid().ToString(), i.ToString());
 			}
 			ctx.Trace("Task1 handler completed! Yay-yay!");
-		}
+		}		
 	}
 }

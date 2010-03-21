@@ -9,11 +9,16 @@ namespace Usage
 		static void Main(string[] args)
 		{
 			var msg = new Task1Msg();
-			for (var i = 0; i < 10; i++)
+			for (var i = 0; i < 300; i++)
 			{
 				Client.Post(msg);
 				Console.WriteLine(i);
-			}			
+			}						
 		}
+	}
+
+	internal class d
+	{
+		
 	}
 }

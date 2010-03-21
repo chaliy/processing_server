@@ -37,6 +37,12 @@ let values (doc : Document) =
 
 type MongoDB.Driver.Document with       
       member x.GetString key = x.[key] :?> string
-      member x.GetID key = x.[key] :?> ID      
+      member x.GetID key = match x.[key] with
+                           | :? ID as x -> x      
+                           | :? MongoDB.Driver.Oid as x -> x.ToString()
+                           | _ -> failwith "Cannot get ID from given value"
       member x.GetData key = (x.[key] :?> Document) |> values
-      member x.GetXml key = XElement.Parse((x.[key] :?> string))
+      member x.GetXml key = match x.[key] with
+                            | :? string as x -> XElement.Parse(x)
+                            | _ -> failwith "Cannot get XML from given value"
+      member x.GetStringList key = (x.[key] :?> string list)

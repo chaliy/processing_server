@@ -27,7 +27,8 @@ type ServiceAgent() =
 
     let convert (t : Task) = 
         { ID = t.ID
-          Data = t.Data }    
+          Data = t.Data
+          Tags = t.Tags }    
         
             
     let service = { new TaskProcessing with

@@ -10,16 +10,20 @@ open System.Threading
 open System.Xml.Linq
 open System.Diagnostics
 
+type Executable = System.Threading.Tasks.Task
+
 type ProcessingAgent(storage : TaskStorage,
                      handlers : ITaskHandler list,
                      tracing : Tracing) =
     
     let mutable runnig = 0
+    let mutable stopping = false
     
     let storageLock = obj()
-    let statsLock = obj()    
+    let statsLock = obj()        
     let sync = SyncContext.Current()
-    let pingTrottler = new Trottler(TimeSpan.FromMilliseconds(500.0))    
+    let pingTrottler = new Trottler(TimeSpan.FromMilliseconds(500.0))
+    let all = System.Collections.Generic.List<Executable>()
 
     let trace msg =
         tracing.Trace msg
@@ -60,17 +64,27 @@ type ProcessingAgent(storage : TaskStorage,
 
     let pickTasks() =
         trace "ProcessingAgent: Ping"
-        if (runnig < 10) then            
+        if (runnig < 10 && (not stopping)) then
             let tasks = lock storageLock (fun () -> storage.Pick(10))
-            trace (sprintf "ProcessingAgent: Tasks recieved %i" tasks.Length)
+            trace (sprintf "ProcessingAgent: Tasks recieved %i" tasks.Length)            
                   
-            tasks
+            tasks 
             |> Seq.map(wrap)
-            |> Seq.iter(fun t -> t.Start())
+            |> Seq.iter(fun t -> 
+                            all.Add(t)
+                            t.Start() )
 
     let start() =
         pingTrottler.Pushed.Add(fun _ -> pickTasks())
         pingTrottler.Ping()
 
+    let stop() =
+        trace "ProcessingAgent: Stop"
+        stopping <- true        
+        Executable.WaitAll(all.ToArray())
+        trace "ProcessingAgent: Stoped!"
+        
+
     member x.Ping = pingTrottler.Ping
-    member x.Start = start
+    member x.Start = start    
+    member x.Stop = stop
