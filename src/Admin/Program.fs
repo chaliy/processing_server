@@ -31,7 +31,7 @@ match command.ToLower() with
 //            printfn "Running: %i; Pending: %i; Completed: %i; Failed: %i" 
 //                stats.Running stats.Pending stats.Completed stats.Failed
 | "stats" -> 
-            let stats = storage.OverallStats()
+            let stats = storage.OverallStats([])
             printfn "Pending: %i; Running: %i; Completed: %i; Failed: %i" 
                 stats.Pending stats.Running stats.Completed stats.Failed
 | _ -> printfn "Invalid command, try next time!"

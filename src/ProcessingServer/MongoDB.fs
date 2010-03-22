@@ -10,7 +10,7 @@ type Context =
 let connect() =
     let mongo = new Mongo()    
     if not (mongo.Connect()) then
-        failwith "Cannot connect"
+        failwith "Cannot connect!"
  
     { new Context with
         member this.get_Item(name) = mongo.[name]
@@ -21,13 +21,13 @@ let rec doc (inp) =
     let prep (x : obj) =
         match x with
         | :? ((string * obj) seq) as xx -> doc(xx) :> obj
-        | :? XElement as xx -> xx.ToString() :> obj        
+        | :? XElement as xx -> xx.ToString() :> obj
         | x -> x
 
-    let addend (d:Document) (k, v) = d.Append(k, prep(v))
+    let append (d:Document) (k, v) = d.Append(k, prep(v))
     let document = Document()
     
-    inp |> Seq.fold addend document
+    inp |> Seq.fold append document
 
 let values (doc : Document) =
     doc.Keys 

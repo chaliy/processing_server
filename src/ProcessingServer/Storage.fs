@@ -95,7 +95,8 @@ type TaskStorage(tracing : Tracing) =
                           v "Data" t.Data
                           v "Tags" t.Tags ])
 
-    let overallStats() =
+    let overallStats(tags:string list) =
+        // TODO update this to use MongoDB group function
         use ctx = connect()     
         let tasks = ctx |> tasks        
         let map = 
@@ -112,8 +113,13 @@ type TaskStorage(tracing : Tracing) =
 
         let mr = tasks.MapReduce()        
         mr.Map <- Code(map)
-        mr.Reduce <- Code(reduce);
+        mr.Reduce <- Code(reduce) 
+        if tags.Length > 0 then       
+            mr.Query <- doc [v "Tags" tags ]
         mr.Execute() |> ignore
+        let rr = 
+            mr.Documents |> Seq.toList
+
         let results = 
             mr.Documents
             |> Seq.map(fun d -> (d.GetString("_id"), d.GetInteger("value")))

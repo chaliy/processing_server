@@ -1,4 +1,4 @@
-﻿//do FsSpec.Runner.Run()
+﻿do FsSpec.Runner.Run()
 
 open Shared
 
@@ -37,21 +37,21 @@ open Shared
 //
 //System.Console.ReadLine() |> ignore
 
-let tr = new Trottler(System.TimeSpan.FromSeconds(10.0))
-tr.Pushed.Add(fun _ -> printfn "Pushed %s" (System.DateTime.UtcNow.ToLongTimeString()))
-
-printfn "Pushing after 0 %s" (System.DateTime.UtcNow.ToLongTimeString())
-tr.Ping()
-printfn "Pushing after 0 %s" (System.DateTime.UtcNow.ToLongTimeString())
-tr.Ping()
-System.Threading.Thread.Sleep(26000)
-printfn "Pushing after 26 %s" (System.DateTime.UtcNow.ToLongTimeString())
-tr.Ping()
-System.Threading.Thread.Sleep(5000)
-printfn "Pushing after 5 %s" (System.DateTime.UtcNow.ToLongTimeString())
-tr.Ping()
-System.Threading.Thread.Sleep(5000)
-printfn "Pushing after 5 %s" (System.DateTime.UtcNow.ToLongTimeString())
-tr.Ping()
-
-System.Console.ReadLine() |> ignore
+//let tr = new Trottler(System.TimeSpan.FromSeconds(10.0))
+//tr.Pushed.Add(fun _ -> printfn "Pushed %s" (System.DateTime.UtcNow.ToLongTimeString()))
+//
+//printfn "Pushing after 0 %s" (System.DateTime.UtcNow.ToLongTimeString())
+//tr.Ping()
+//printfn "Pushing after 0 %s" (System.DateTime.UtcNow.ToLongTimeString())
+//tr.Ping()
+//System.Threading.Thread.Sleep(26000)
+//printfn "Pushing after 26 %s" (System.DateTime.UtcNow.ToLongTimeString())
+//tr.Ping()
+//System.Threading.Thread.Sleep(5000)
+//printfn "Pushing after 5 %s" (System.DateTime.UtcNow.ToLongTimeString())
+//tr.Ping()
+//System.Threading.Thread.Sleep(5000)
+//printfn "Pushing after 5 %s" (System.DateTime.UtcNow.ToLongTimeString())
+//tr.Ping()
+//
+//System.Console.ReadLine() |> ignore

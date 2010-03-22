@@ -49,8 +49,8 @@ type ServiceAgent() =
 [<ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)>]
 type TaskProcessingStatsService(storage : TaskStorage) =
 
-    let queryOverallStats spec =        
-        let stats = storage.OverallStats()
+    let queryOverallStats tags =            
+        let stats = storage.OverallStats(tags)
         let res = new OverallStats()
         res.Pending <- stats.Pending
         res.Running <- stats.Running
@@ -59,7 +59,7 @@ type TaskProcessingStatsService(storage : TaskStorage) =
         res
 
     interface TaskProcessingStats with
-        member gms.QueryOverallStats(spec) = queryOverallStats(spec)
+        member gms.QueryOverallStats(spec) = queryOverallStats(spec.Tags)
 
 type StatsServiceAgent(storage : TaskStorage) =
 
