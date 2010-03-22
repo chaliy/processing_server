@@ -26,8 +26,12 @@ let command =
 match command.ToLower() with
 | "dump" -> storage.Dump()    
 | "clean" -> storage.Clean()
+//| "stats" -> 
+//            let stats = ProcessingServer.Client.TaskProcessingStatsClient("http://localhost:1066").QueryOverallStats([||])
+//            printfn "Running: %i; Pending: %i; Completed: %i; Failed: %i" 
+//                stats.Running stats.Pending stats.Completed stats.Failed
 | "stats" -> 
-            let stats = ProcessingServer.Client.TaskProcessingStatsClient("http://localhost:1066").QueryOveralStats([||])
-            printfn "Running: %i; Pending: %i; Completed: %i; Failed: %i" 
-                stats.Runnig stats.Pending stats.Completed stats.Failed
+            let stats = storage.OverallStats()
+            printfn "Pending: %i; Running: %i; Completed: %i; Failed: %i" 
+                stats.Pending stats.Running stats.Completed stats.Failed
 | _ -> printfn "Invalid command, try next time!"

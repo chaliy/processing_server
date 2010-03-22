@@ -37,6 +37,10 @@ let values (doc : Document) =
 
 type MongoDB.Driver.Document with       
       member x.GetString key = x.[key] :?> string
+      member x.GetInteger key = match x.[key] with
+                                | :? int as x -> x
+                                | :? double as x -> System.Convert.ToInt32(x)
+                                | _ -> failwith "Cannot get integer from given value"
       member x.GetID key = match x.[key] with
                            | :? ID as x -> x      
                            | :? MongoDB.Driver.Oid as x -> x.ToString()

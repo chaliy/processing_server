@@ -40,11 +40,11 @@ type TaskProcessingClient(server : string) =
 
 type TaskProcessingStatsClient(server : string) =
     
-    let queryOveralStats (tags : string array) =        
-        let spec = OveralStatsQuerySpec()
+    let queryOverallStats (tags : string array) =        
+        let spec = OverallStatsQuerySpec()
         spec.Tags <- tags |> Array.toList
 
         Execute<TaskProcessingStats, _> 
-            server "TaskProcessingStats/" (fun ch -> ch.QueryOveralStats(spec))
+            server "TaskProcessingStats/" (fun ch -> ch.QueryOverallStats(spec))
                     
-    member x.QueryOveralStats([<System.ParamArray>] tags) = queryOveralStats(tags)
+    member x.QueryOverallStats([<System.ParamArray>] tags) = queryOverallStats(tags)

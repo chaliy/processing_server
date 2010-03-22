@@ -28,6 +28,13 @@ type TaskStatus =
 //    FailedMessage : Option<string>
 //}
 
+type OverallStats = {
+    Pending : int
+    Running : int
+    Completed : int
+    Failed : int                
+}
+
 type TaskStorage(tracing : Tracing) =    
 
     let s = function
@@ -88,6 +95,42 @@ type TaskStorage(tracing : Tracing) =
                           v "Data" t.Data
                           v "Tags" t.Tags ])
 
+    let overallStats() =
+        use ctx = connect()     
+        let tasks = ctx |> tasks        
+        let map = 
+            "function(){\n" +
+            "   emit( this.Status , 1 );\n" +            
+            "};";
+        let reduce = 
+            "function( key , values ){\n" +            
+            "    var total = 0;\n" +
+            "    for ( var i = 0; i < values.length; i++ )\n" +
+            "        total += values[i];\n" +
+            "    return total;\n" +
+            "};";
+
+        let mr = tasks.MapReduce()        
+        mr.Map <- Code(map)
+        mr.Reduce <- Code(reduce);
+        mr.Execute() |> ignore
+        let results = 
+            mr.Documents
+            |> Seq.map(fun d -> (d.GetString("_id"), d.GetInteger("value")))
+
+        let resultFor statuses =
+            results 
+            |> Seq.filter(fun (st, value) -> statuses |> Seq.exists(fun x -> st = (s x)))
+            |> Seq.sumBy(fun (st, value) -> value)
+
+        {
+            Pending = resultFor [Pending]
+            Running = resultFor [Picked; Started]
+            Completed = resultFor [Completed]
+            Failed = resultFor [Failed]
+        }        
+        
+
     let byId id = 
         doc [v "_id" id]
                   
@@ -114,3 +157,4 @@ type TaskStorage(tracing : Tracing) =
     member x.Post = post
     member x.Dump = dump
     member x.Clean = clean
+    member x.OverallStats = overallStats
